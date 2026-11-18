@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>No Code Society</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%23000%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2211%22 fill=%22%23e9e9e4%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%229%22 fill=%22%23000%22/%3E%3C/svg%3E">
+<meta name="description" content="UNSW No Code Society. A builders collective teaching students to ship real products with no-code and AI tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one fixed WebGL world seen through a 1-bit dither. Scroll is a film: each chapter is pinned and its beats cut in place over the world. */
+:root{
+  --ink:#0b0b0c;
+  --paper:#e9e9e4;
+  --soft:#c4c4be;
+  --mute:#85857f;
+  --line:rgba(233,233,228,.18);
+  --signal:#ffde4a;
+  --font-px:'Silkscreen', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-mono:'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --gut-l:max(clamp(16px,4vw,56px), env(safe-area-inset-left,0px));
+  --gut-r:max(clamp(16px,4vw,56px), env(safe-area-inset-right,0px));
+  --top:calc(env(safe-area-inset-top,0px) + 112px);
+  --bot:calc(env(safe-area-inset-bottom,0px) + 64px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:#000;color:var(--paper)}
+body{font:400 14.5px/1.65 var(--font-mono);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:#000}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--signal);outline-offset:3px}
+::selection{background:var(--signal);color:var(--ink)}
+p{margin:0}
+.lbl{font-size:11px;line-height:1.45;letter-spacing:.07em;text-transform:uppercase}
+.mute{color:var(--mute)}
+
+#gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;background:#000}
+.no-gl #gl{display:none}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;z-index:50}
+.top{top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px var(--gut-r) 0 var(--gut-l);pointer-events:none}
+.top > *{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand canvas{width:32px;height:32px;image-rendering:pixelated}
+.brand-t{font-family:var(--font-px);font-size:13px;line-height:1;letter-spacing:.02em}
+.brand-t small{display:block;font-family:var(--font-mono);font-size:10px;color:var(--mute);letter-spacing:.07em;margin-top:5px;text-transform:uppercase}
+nav.tabs{display:flex;gap:0;align-items:center}
+nav.tabs a{position:relative;text-decoration:none;padding:6px 11px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+nav.tabs a:hover{color:var(--paper)}
+nav.tabs a[aria-current="true"]{color:var(--paper)}
+nav.tabs a[aria-current="true"]::before{content:"";position:absolute;left:0;top:50%;width:4px;height:4px;margin-top:-2px;background:var(--paper)}
+nav.tabs a.join{color:var(--ink);background:var(--signal);margin-left:10px;padding:6px 12px}
+nav.tabs a.join::before{display:none}
+nav.tabs a.join:hover{background:#fff}
+.manifesto{top:calc(env(safe-area-inset-top,0px) + 72px);right:var(--gut-r);width:16rem;color:var(--mute)}
+.manifesto b{color:var(--paper);font-weight:400}
+.bl{left:var(--gut-l);bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.br{right:var(--gut-r);bottom:calc(20px + env(safe-area-inset-bottom,0px));text-align:right;color:var(--mute)}
+.br b{color:var(--paper);font-weight:400}
+#sound{display:inline-flex;align-items:center;gap:8px;color:var(--mute)}
+#sound:hover{color:var(--paper)}
+#sound b{color:var(--paper);font-weight:400}
+.eq{display:inline-flex;gap:2px;align-items:flex-end;height:10px}
+.eq i{display:block;width:2px;height:2px;background:currentColor}
+#sound[aria-pressed="true"] .eq i{animation:eq 1s steps(4) infinite}
+#sound[aria-pressed="true"] .eq i:nth-child(2){animation-delay:-.3s}
+#sound[aria-pressed="true"] .eq i:nth-child(3){animation-delay:-.6s}
+#sound[aria-pressed="true"] .eq i:nth-child(4){animation-delay:-.15s}
+@keyframes eq{0%{height:2px}25%{height:9px}50%{height:4px}75%{height:7px}100%{height:2px}}
+.rail{position:fixed;right:calc(var(--gut-r) - 18px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:50}
+.rail a{display:block;width:16px;height:14px;position:relative}
+.rail a::after{content:"";position:absolute;left:7px;top:6px;width:2px;height:2px;background:var(--mute)}
+.rail a[aria-current="true"]::after{background:var(--signal);left:5px;top:4px;width:6px;height:6px}
+#tags{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--paper);will-change:transform,opacity;opacity:0}
+.tag-dot{width:5px;height:5px;background:var(--paper);flex:none}
+.tag-s{color:var(--mute)}
+.tag.flip{flex-direction:row-reverse}
+.tag.hot .tag-dot{background:var(--signal)}
+.tag.hot .tag-t{color:var(--signal)}
+
+/* ---------- scroll spacers (the film's timeline) ---------- */
+main{position:relative;z-index:1;pointer-events:none}
+main > section{display:block}
+
+/* ---------- stages (pinned) ---------- */
+.stage{position:fixed;inset:0;z-index:3;pointer-events:none;display:none}
+.stage.on{display:block}
+.beat{position:absolute;left:var(--gut-l);top:var(--top);bottom:var(--bot);width:min(31rem,44vw);display:flex;flex-direction:column;justify-content:center;gap:18px;visibility:hidden}
+.beat.on{visibility:visible}
+.beat .pre{visibility:hidden}
+.stage.on .beat.on :is(a,button,.photo,.row,tr,.kv){pointer-events:auto}
+.eyebrow{display:flex;align-items:center;gap:10px;color:var(--mute)}
+.eyebrow::before{content:"";width:6px;height:6px;background:var(--paper)}
+h2.px{font-family:var(--font-px);font-weight:400;font-size:clamp(34px,4.6vw,64px);line-height:1;letter-spacing:0;margin:0;text-wrap:balance}
+.big{font-family:var(--font-px);font-weight:400;font-size:clamp(36px,4.4vw,58px);line-height:1;margin:0;letter-spacing:.01em}
+.lede{font-size:16px;line-height:1.6;color:var(--paper);max-width:29rem}
+.body{color:var(--soft);max-width:29rem}
+.rules{display:grid;border-top:1px solid var(--line)}
+.rules > *{border-bottom:1px solid var(--line);padding:12px 0}
+.kv{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:16px;align-items:baseline}
+.kv > .lbl{color:var(--mute)}
+.kv p{color:var(--soft)}
+.kv:hover > .lbl{color:var(--paper)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}
+.stats > div{border-top:1px solid var(--line);padding:12px 0 14px}
+.stats .n{font-family:var(--font-px);font-size:clamp(26px,2.6vw,36px);line-height:1;font-variant-numeric:tabular-nums}
+.stats .lbl{color:var(--mute);margin-top:8px}
+.slash{color:var(--soft)}
+.slash span+span::before{content:" / ";color:var(--mute)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px 9px;border:1px solid var(--line);text-decoration:none;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.btn:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.btn.sig{background:var(--signal);border-color:var(--signal);color:var(--ink)}
+.btn.sig:hover{background:#fff;border-color:#fff}
+.row-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;color:var(--mute)}
+
+/* home */
+.mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);text-align:center;margin:0;pointer-events:none;user-select:none}
+.mark .w{display:block;font-family:var(--font-px);font-weight:400;font-size:min(8.4vw,11.5vh,108px);line-height:.92;letter-spacing:.02em}
+.mark .s{display:block;font-family:var(--font-px);font-size:min(1.6vw,2.2vh,19px);letter-spacing:.34em;margin-top:.9em;padding-left:.34em}
+.hero-lede{position:absolute;left:var(--gut-l);bottom:calc(64px + env(safe-area-inset-bottom,0px));max-width:24rem;font-size:15px;line-height:1.6}
+.cue{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;color:var(--mute)}
+.cue .chev{display:grid;gap:2px}
+.cue .chev i{display:block;width:6px;height:6px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg);animation:chev 1.6s steps(2) infinite}
+.cue .chev i:nth-child(2){animation-delay:.2s}
+@keyframes chev{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* photos */
+@property --r{syntax:'<length>';inherits:true;initial-value:0px}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(40rem,52vw)}
+.photo{position:relative;margin:0;overflow:hidden;aspect-ratio:4/3;max-width:100%;cursor:crosshair;--r:0px;transition:--r .4s cubic-bezier(.16,1,.3,1)}
+.photo.lens{--r:88px}
+.photo.wide{grid-column:1 / -1;aspect-ratio:2.1/1}
+.photo img,.photo canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.photo canvas{image-rendering:pixelated;-webkit-mask-image:radial-gradient(circle var(--r) at var(--mx,50%) var(--my,50%),transparent calc(100% - 1px),#000 100%);mask-image:radial-gradient(circle var(--r) at var(--mx,50%) var(--my,50%),transparent calc(100% - 1px),#000 100%)}
+.photo figcaption{position:absolute;left:8px;bottom:8px;z-index:2;background:#000;padding:2px 6px 1px}
+
+/* education */
+.tool{font-family:var(--font-px);font-size:clamp(40px,5vw,66px);line-height:1;letter-spacing:.01em}
+
+/* log */
+.beat.wide{width:min(64rem,calc(100vw - var(--gut-l) - var(--gut-r) - 40px))}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;vertical-align:top;padding:11px 14px 11px 0;border-bottom:1px solid var(--line)}
+th{font-weight:400;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);border-top:1px solid var(--line)}
+td{font-size:13.5px;line-height:1.5;color:var(--soft)}
+td.d{color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+td.e{color:var(--paper);white-space:nowrap}
+tbody tr:hover td{color:var(--paper)}
+
+/* team */
+.crew{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px;width:min(40rem,52vw)}
+.row{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);text-decoration:none}
+.row canvas{width:40px;height:40px;image-rendering:pixelated;display:block}
+.row .nm{color:var(--paper);line-height:1.3}
+.row .rl{color:var(--mute);font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-top:2px}
+.row:hover .nm,.row.hot .nm{color:var(--signal)}
+
+/* join */
+.beat.center{left:50%;transform:translateX(-50%);width:min(44rem,calc(100vw - 32px));align-items:center;text-align:center;justify-content:flex-start;padding-top:4vh}
+.beat.center h2.px{font-size:clamp(42px,7.6vw,104px)}
+.ctas{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.mail{display:inline-flex;align-items:center;gap:10px;color:var(--mute)}
+.mail span{color:var(--paper);user-select:all}
+.mail button{padding:3px 7px;border:1px solid var(--line);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase}
+.mail button:hover{border-color:var(--paper)}
+.partners{color:var(--mute);max-width:40rem;font-size:12.5px}
+.partners b{color:var(--paper);font-weight:400}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){ .manifesto{display:none} }
+@media (max-width:820px){
+  :root{--top:calc(env(safe-area-inset-top,0px) + 96px);--bot:calc(env(safe-area-inset-bottom,0px) + 54px)}
+  body{font-size:13.5px}
+  .top{flex-direction:column;align-items:stretch;gap:10px;padding-top:12px}
+  nav.tabs{justify-content:space-between}
+  nav.tabs a{padding:6px 4px;font-size:10px;letter-spacing:.04em}
+  nav.tabs a[aria-current="true"]::before{display:none}
+  nav.tabs a[aria-current="true"]{text-decoration:underline;text-underline-offset:4px}
+  nav.tabs a.join{margin-left:0;padding:6px 8px}
+  .rail{display:none}
+  .beat{width:auto;right:var(--gut-r);top:auto;justify-content:flex-end;gap:14px}
+  .beat.center{right:auto;top:var(--top);justify-content:flex-start}
+  h2.px{font-size:clamp(30px,9vw,42px)}
+  .tool{font-size:40px}
+  .big{font-size:34px}
+  .lede{font-size:14.5px}
+  .mark .w{font-size:min(15vw,9vh)}
+  .mark .s{font-size:min(3.2vw,13px)}
+  .hero-lede{right:var(--gut-r);bottom:calc(58px + env(safe-area-inset-bottom,0px));font-size:14px}
+  .cue{display:none}
+  .tag-s{display:none}
+  .photos{width:100%}
+  .photos .photo:nth-child(3){display:none}
+  .photos .photo{grid-column:1 / -1;aspect-ratio:2/1}
+  .crew{width:100%;grid-template-columns:minmax(0,1fr)}
+  .row{padding:7px 0}
+  .row canvas{width:30px;height:30px}
+  .kv{grid-template-columns:6.5rem minmax(0,1fr);gap:12px}
+  .beat.wide{width:auto}
+  thead{display:none}
+  tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--line)}
+  tbody td{padding:0;border:0;font-size:12.5px}
+  td.e{grid-column:1;grid-row:1}
+  td.d{grid-column:2;grid-row:1}
+  td:nth-child(3),td:nth-child(5){display:none}
+  td:nth-child(4){grid-column:1 / -1}
+}
+@media (max-width:820px) and (max-height:700px){ .body.opt{display:none} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div id="tags" aria-hidden="true"></div>
+
+<header class="hud top">
+  <a class="brand" href="#home" data-nav="home" aria-label="No Code Society, home">
+    <canvas id="brandmark" width="32" height="32"></canvas>
+    <span class="brand-t">NO CODE<small>Society // UNSW</small></span>
+  </a>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#home" data-nav="home">Home</a>
+    <a href="#purpose" data-nav="purpose">Purpose</a>
+    <a href="#education" data-nav="education">Education</a>
+    <a href="#projects" data-nav="projects">Projects</a>
+    <a href="#team" data-nav="team">Team</a>
+    <a href="#join" data-nav="join" class="join">Join</a>
+  </nav>
+</header>
+<div class="hud manifesto lbl" id="manifesto"><b>////// Builders collective</b><br>We teach UNSW students to turn ideas into working products with no-code and AI tools. No comp sci degree required.</div>
+<div class="hud bl lbl"><button id="sound" aria-pressed="false" aria-label="Toggle sound"><span class="eq"><i></i><i></i><i></i><i></i></span>Sound: <b id="soundState">Off</b></button></div>
+<div class="hud br lbl" id="readout"><span id="ldr">Loading <b id="ldn">000</b></span><span id="chr" hidden><b id="chNum">01</b> / 06 &nbsp;<span id="chName">Home</span></span></div>
+<nav class="rail" aria-label="Chapter progress">
+  <a href="#home" data-nav="home" aria-label="Home"></a>
+  <a href="#purpose" data-nav="purpose" aria-label="Purpose"></a>
+  <a href="#education" data-nav="education" aria-label="Education"></a>
+  <a href="#projects" data-nav="projects" aria-label="Projects"></a>
+  <a href="#team" data-nav="team" aria-label="Team"></a>
+  <a href="#join" data-nav="join" aria-label="Join"></a>
+</nav>
+
+<!-- scroll timeline: one spacer per chapter, one screen per beat -->
+<main aria-hidden="true">
+  <section id="home" data-beats="1" style="height:100svh"></section>
+  <section id="purpose" data-beats="4" style="height:400svh"></section>
+  <section id="education" data-beats="6" style="height:600svh"></section>
+  <section id="projects" data-beats="6" style="height:600svh"></section>
+  <section id="team" data-beats="3" style="height:300svh"></section>
+  <section id="join" data-beats="1" style="height:150svh"></section>
+</main>
+
+<!-- HOME -->
+<div class="stage" data-ch="home" data-name="Home">
+  <div class="beat" style="position:static;visibility:inherit;display:block">
+    <h1 class="mark" aria-label="No Code Society"><span class="w" data-scr>NO</span><span class="w" data-scr>CODE</span><span class="s">Society.</span></h1>
+    <p class="hero-lede">UNSW's builders collective. We teach students to ship real products with no-code and AI tools, and then we ship them.</p>
+    <div class="cue lbl"><span class="chev"><i></i><i></i></span>Scroll to enter orbit</div>
+  </div>
+</div>
+
+<!-- PURPOSE -->
+<div class="stage" data-ch="purpose" data-name="Purpose">
+  <div class="beat">
+    <div class="eyebrow lbl">02 // Purpose</div>
+    <h2 class="px" data-scr>Ideas become products here.</h2>
+    <p class="lede">No Code Society is where UNSW students go from an idea to something people can actually click, usually in a single sitting.</p>
+    <p class="body opt">The tools changed. Base44, Framer, Notion and Codex let one student do what used to take a team of engineers. We run workshops, build nights and hackathons so everyone at UNSW, from medicine to actuarial studies, knows how to use them.</p>
+  </div>
+  <div class="beat">
+    <div class="eyebrow lbl">02.1 // How we work</div>
+    <div class="rules">
+      <div class="kv"><span class="lbl">Build first</span><p>You leave every session with something working, not a page of notes.</p></div>
+      <div class="kv"><span class="lbl">Ship in public</span><p>Projects get demoed, judged by people who build for a living, and posted.</p></div>
+      <div class="kv"><span class="lbl">No gatekeeping</span><p>First-timers and engineers build at the same table.</p></div>
+    </div>
+    <div class="stats">
+      <div><div class="n">250</div><div class="lbl">Students, Hack for Humanity</div></div>
+      <div><div class="n">100</div><div class="lbl">Builders, DEBUGGED</div></div>
+      <div><div class="n">$15K+</div><div class="lbl">Prize pool, Health Hack</div></div>
+      <div><div class="n">14</div><div class="lbl">Partner orgs</div></div>
+    </div>
+  </div>
+  <div class="beat">
+    <div class="eyebrow lbl">02.2 // In the room</div>
+    <div class="photos">
+      <figure class="photo wide"><img src="img/ph-crowd.jpg" alt="Students holding pastry boxes at Hack for Humanity"><canvas></canvas><figcaption class="lbl">Hack for Humanity // Sep 2026</figcaption></figure>
+      <figure class="photo"><img src="img/ph-pitch.jpg" alt="A student pitching with a microphone in front of a projected slide"><canvas></canvas><figcaption class="lbl">Pitch round</figcaption></figure>
+      <figure class="photo"><img src="img/ph-team.jpg" alt="Three students at the Hack for Humanity banner"><canvas></canvas><figcaption class="lbl">Team photo</figcaption></figure>
+    </div>
+    <p class="lbl mute">Hover a photo to see it in colour</p>
+  </div>
+  <div class="beat">
+    <div class="eyebrow lbl">02.3 // Portfolios</div>
+    <h2 class="px" data-scr>Five portfolios. One galaxy.</h2>
+    <div class="rules" id="orbits">
+      <div class="kv" data-moon="0"><span class="lbl">Projects</span><p>Scope, staff and ship no-code projects and tools.</p></div>
+      <div class="kv" data-moon="1"><span class="lbl">Events</span><p>Workshops and hackathons end to end.</p></div>
+      <div class="kv" data-moon="2"><span class="lbl">Marketing</span><p>Campaigns, socials, email. Keep the brand sharp.</p></div>
+      <div class="kv" data-moon="3"><span class="lbl">Sponsorships</span><p>The companies whose tools we teach.</p></div>
+      <div class="kv" data-moon="4"><span class="lbl">HR</span><p>Onboarding, culture, feedback.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDUCATION -->
+<div class="stage" data-ch="education" data-name="Education">
+  <div class="beat">
+    <div class="eyebrow lbl">03 // Education</div>
+    <h2 class="px" data-scr>Learn by shipping.</h2>
+    <p class="lede">Every workshop ends with a working thing. Bring a laptop, pick a problem, leave with a product. No lectures, no prerequisites.</p>
+    <p class="slash lbl"><span>Notion</span><span>Framer</span><span>Base44</span><span>A1Zap</span><span>Sym</span><span>Make</span><span>Codex</span><span>Claude Code</span></p>
+  </div>
+  <div class="beat" data-word="0">
+    <div class="row-h lbl"><span>03.1 // Workshop</span><span>Mar 2026</span></div>
+    <div class="tool" data-scr>Notion</div>
+    <p class="lede">Workspace build night, run with the official Notion team: a hands-on dashboard build, a one-hour mini hackathon, then a showcase and prizes.</p>
+    <div class="rules"><div class="kv"><span class="lbl">When</span><p>Thu 19 March, 5:00 to 7:30pm</p></div><div class="kv"><span class="lbl">Leave with</span><p>A personal workspace and a hackathon entry</p></div></div>
+  </div>
+  <div class="beat" data-word="1">
+    <div class="row-h lbl"><span>03.2 // Hackathon</span><span>Jun 2026</span></div>
+    <div class="tool" data-scr>A1Zap</div>
+    <p class="lede">DEBUGGED, with UNSW AISoc and UNSW Founders. Nearly 100 builders made campus mini-apps in a day. The traffic briefly broke the platform.</p>
+    <div class="rules"><div class="kv"><span class="lbl">When</span><p>Sat 6 June, 10am to 6pm</p></div><div class="kv"><span class="lbl">Leave with</span><p>A shipped campus app</p></div></div>
+  </div>
+  <div class="beat" data-word="2">
+    <div class="row-h lbl"><span>03.3 // Workshop</span><span>Jun 2026</span></div>
+    <div class="tool" data-scr>Framer</div>
+    <p class="lede">Build a standout personal website. Design, structure and publish a portfolio that shows who you are, led by Haraneesh Shah and Harish Prabhu.</p>
+    <div class="rules"><div class="kv"><span class="lbl">Where</span><p>Tyree Energy Technologies Building</p></div><div class="kv"><span class="lbl">Leave with</span><p>A live site: hero, about, projects, motion</p></div></div>
+  </div>
+  <div class="beat" data-word="3">
+    <div class="row-h lbl"><span>03.4 // Workshop</span><span>Oct 2026</span></div>
+    <div class="tool" data-scr>Base44</div>
+    <p class="lede">Build Your Life, with UNSW Founders and Enactus UNSW. Map a problem, build a personal dashboard, then add a Superagent wired to your email, calendar and Drive.</p>
+    <div class="rules"><div class="kv"><span class="lbl">Where</span><p>Bioscience G07, Tue 6 October</p></div><div class="kv"><span class="lbl">Leave with</span><p>A second brain that acts on its own</p></div></div>
+  </div>
+  <div class="beat" data-word="4">
+    <div class="row-h lbl"><span>03.5 // Hackathon</span><span>Oct 2026</span></div>
+    <div class="tool" data-scr>Sym AI</div>
+    <p class="lede">Sym AI Open, co-hosted with MQAIS, UTS TechSoc, USYD SoftSoc, USYD StatSoc and MQ EngSoc. Pick an app you use and rebuild it on a shared cloud AI computer.</p>
+    <div class="rules"><div class="kv"><span class="lbl">Where</span><p>Macquarie University, 17 to 18 October</p></div><div class="kv"><span class="lbl">Leave with</span><p>A working MVP and a pitch</p></div></div>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<div class="stage" data-ch="projects" data-name="Projects">
+  <div class="beat">
+    <div class="eyebrow lbl">04 // Projects</div>
+    <h2 class="px" data-scr>Shipped by members.</h2>
+    <p class="lede">Real products built by students at our hackathons. Most went from a blank page to a working app in under a day.</p>
+  </div>
+  <div class="beat" data-art="0">
+    <div class="row-h lbl"><span>Project_01 // DEBUGGED 2026</span><span style="color:var(--signal)">1st place</span></div>
+    <h3 class="big" data-scr>CampusSync</h3>
+    <p class="lede">Import your iCal timetable, see when your friends are free, find campus events that fit the gap and plan as a group, all in one app.</p>
+    <div class="rules"><div class="kv"><span class="lbl">Built with</span><p>A1Zap, Codex, Claude Code</p></div><div class="kv"><span class="lbl">Team</span><p>Angelica T, Anvita Matapurkar, Agrima Bansal</p></div></div>
+  </div>
+  <div class="beat" data-art="1">
+    <div class="row-h lbl"><span>Project_02 // DEBUGGED 2026</span><span style="color:var(--signal)">Live</span></div>
+    <h3 class="big" data-scr>Quad</h3>
+    <p class="lede">A game lobby for real life. Host or join spontaneous campus events in a tap. Built and hosted in under five hours, on a platform the team had never used.</p>
+    <div class="rules"><div class="kv"><span class="lbl">Built with</span><p>A1Zap</p></div><div class="kv"><span class="lbl">Team</span><p>Gia Thanh Ngo, Christopher Khim</p></div></div>
+  </div>
+  <div class="beat" data-art="2">
+    <div class="row-h lbl"><span>Project_03 // DEBUGGED 2026</span><span style="color:var(--signal)">2nd of 14</span></div>
+    <h3 class="big" data-scr>LifeMaxxing</h3>
+    <p class="lede">Second place out of fourteen teams. On the same podium, Aura took third and Bump won People's Choice.</p>
+    <div class="rules"><div class="kv"><span class="lbl">Built with</span><p>A1Zap</p></div><div class="kv"><span class="lbl">Team</span><p>Tishaylan Gungudoo, Aryan, Annie, Aiden</p></div></div>
+  </div>
+  <div class="beat" data-art="3">
+    <div class="row-h lbl"><span>Project_04 // Ship log</span><span style="color:var(--signal)">Open</span></div>
+    <h3 class="big" data-scr>Your build</h3>
+    <p class="lede">Every month the Projects portfolio posts what members shipped: hackathon entries, side projects, tools for clubs. Built something with no-code or AI? It goes on the log.</p>
+    <div><a class="btn sig" href="https://www.instagram.com/ncsunsw/" target="_blank" rel="noopener">Submit a project &gt;</a></div>
+  </div>
+  <div class="beat wide">
+    <div class="row-h lbl"><span>04.5 // Hackathon log</span><span>UNSW, UTS, USYD, Macquarie</span></div>
+    <table>
+      <thead><tr><th>Date</th><th>Event</th><th>Where</th><th>What happened</th><th>With</th></tr></thead>
+      <tbody>
+        <tr><td class="d">2026.10.17</td><td class="e">Sym AI Open</td><td>Macquarie Uni</td><td>Teams of 2 to 4 rebuilt existing apps. $2,000 prize pool.</td><td>MQAIS, UTS TechSoc, SoftSoc, StatSoc, MQ EngSoc</td></tr>
+        <tr><td class="d">2026.09.05</td><td class="e">Hack for Humanity</td><td>UTS Building 2</td><td>250 students, 48 hours, tools for Bipolar Australia, Save the Children and Lou's Place. Judged by Wix CMO Omer Shai.</td><td>Base44, Enactus UNSW, UTS TechSoc, MQAIS, SoftSoc, WIT USYD</td></tr>
+        <tr><td class="d">2026.07.18</td><td class="e">Health Hack</td><td>Stone &amp; Chalk</td><td>Real clinical problems. $15K+ in prizes, including US$10,000 in Codex credits for first.</td><td>MLAI, OpenAI, Stone &amp; Chalk, Base44</td></tr>
+        <tr><td class="d">2026.06.06</td><td class="e">DEBUGGED</td><td>UNSW</td><td>~100 builders, 14 teams, campus mini-apps.</td><td>UNSW AISoc, UNSW Founders, A1Zap</td></tr>
+        <tr><td class="d">2026.03.19</td><td class="e">Notion build night</td><td>UNSW</td><td>Dashboard workshop with the Notion team, then a mini hackathon.</td><td>Notion</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TEAM -->
+<div class="stage" data-ch="team" data-name="Team">
+  <div class="beat">
+    <div class="eyebrow lbl">05 // Team</div>
+    <h2 class="px" data-scr>The 2027 crew.</h2>
+    <p class="lede">Our exec studies medicine, actuarial studies, economics, civil engineering and computer science. That is the point.</p>
+  </div>
+  <div class="beat">
+    <div class="eyebrow lbl">05.1 // Executive</div>
+    <div class="crew" id="crew">
+      <a class="row" data-sat="0" href="https://www.linkedin.com/in/serumula-mathekga-35b0863a0/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Serumula Mathekga</div><div class="rl">President</div></div></a>
+      <a class="row" data-sat="1" href="https://www.linkedin.com/in/zubin-gandhi-9a4816216/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Zubin Gandhi</div><div class="rl">VP Internals</div></div></a>
+      <a class="row" data-sat="2" href="https://www.linkedin.com/in/abhaydhanger/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Abhay Dhanger</div><div class="rl">VP Externals</div></div></a>
+      <a class="row" data-sat="3" href="https://www.linkedin.com/in/niranjan-praveen-349364323/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Niranjan Praveen</div><div class="rl">VP Operations</div></div></a>
+      <a class="row" data-sat="4" href="https://www.linkedin.com/in/pragya-r-a8a567319/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Pragya Rawat</div><div class="rl">Treasurer</div></div></a>
+      <a class="row" data-sat="5" href="https://www.linkedin.com/in/demin-cai-a04a59226/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Demin Cai</div><div class="rl">Secretary</div></div></a>
+      <a class="row" data-sat="6" href="https://www.linkedin.com/in/preethi-thilagar-150a48422/" target="_blank" rel="noopener"><canvas width="20" height="20"></canvas><div><div class="nm">Preethi Thilagar</div><div class="rl">Women's Officer</div></div></a>
+    </div>
+  </div>
+  <div class="beat">
+    <div class="eyebrow lbl">05.2 // Directors</div>
+    <h2 class="px" data-scr>Twenty more builders.</h2>
+    <p class="lede">Three to four directors in each portfolio: Projects, Events, Marketing, Sponsorships and HR. The 2027 directors were inducted on 16 November.</p>
+    <p class="body">Built on the work of the 2026 exec: Harish Prabhu, Haraneesh Shah, Varun Shekhar Singh, Alfonso Kim and Hannah Bomford.</p>
+  </div>
+</div>
+
+<!-- JOIN -->
+<div class="stage" data-ch="join" data-name="Join">
+  <div class="beat center">
+    <div class="eyebrow lbl">06 // Join</div>
+    <h2 class="px" data-scr>Pick your orbit.</h2>
+    <p class="lede">Come to a workshop, bring a laptop, build something.</p>
+    <div class="ctas">
+      <a class="btn sig" href="https://www.instagram.com/ncsunsw/" target="_blank" rel="noopener">Instagram @ncsunsw &gt;</a>
+      <a class="btn" href="https://www.linkedin.com/company/no-code-society/" target="_blank" rel="noopener">LinkedIn &gt;</a>
+      <a class="btn" href="https://linktr.ee/nocodesoc" target="_blank" rel="noopener">All links &gt;</a>
+    </div>
+    <div class="mail lbl">Email <span id="mailAddr">nocodesoc@gmail.com</span><button id="copyMail" type="button">Copy</button></div>
+    <p class="partners lbl"><b>Built with</b> Base44 / OpenAI / Notion / A1Zap / Sym / Stone &amp; Chalk / MLAI / UNSW Founders / Enactus UNSW / UNSW AISoc / UTS TechSoc / MQAIS / USYD SoftSoc / WIT</p>
+    <p class="lbl mute">&copy; 2026 UNSW No Code Society // Arc UNSW club // Kensington, Sydney</p>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const easeOut4 = t => 1 - Math.pow(1 - t, 4);
+const expo = t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+/* ================= 1-bit helpers ================= */
+const BAYER = (() => { let m = [[0]]; for (let n = 0; n < 3; n++) { const s = m.length, o = []; for (let y = 0; y < s * 2; y++) { o[y] = []; for (let x = 0; x < s * 2; x++) { const q = (y < s ? 0 : 2) + (x < s ? 0 : 1); o[y][x] = 4 * m[y % s][x % s] + [0, 2, 3, 1][q]; } } m = o; } return m.map(r => r.map(v => (v + .5) / 64)); })();
+const INK = [0, 0, 0], PAPER = [233, 233, 228];
+const norm = v => { const l = Math.hypot(...v); return v.map(x => x / l); };
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+function ditherPlanet(cv, lx = -1, ly = .2, lx2 = 1, ly2 = -.1) {
+  const w = cv.width, h = cv.height, c = cv.getContext('2d'), im = c.createImageData(w, h);
+  const L1 = norm([lx, ly, -.75]), L2 = norm([lx2, ly2, -.75]);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const nx = (x + .5) / w * 2 - 1, ny = -((y + .5) / h * 2 - 1); const r2 = nx * nx + ny * ny; let l = 0;
+    if (r2 < .78) { const s = Math.sqrt(.78), X = nx / s, Y = ny / s, Z = Math.sqrt(Math.max(0, 1 - X * X - Y * Y)); const n = [X, Y, Z]; l = Math.max(0, dot(n, L1)) * 1.1 + Math.max(0, dot(n, L2)) * .85 + Math.pow(1 - Z, 3) * .25 + .06; }
+    else l = Math.random() < .03 * (1.6 - Math.min(1.5, r2)) ? .9 : 0;
+    const b = l > BAYER[y % 8][x % 8] ? PAPER : INK, i = (y * w + x) * 4; im.data[i] = b[0]; im.data[i + 1] = b[1]; im.data[i + 2] = b[2]; im.data[i + 3] = 255;
+  }
+  c.putImageData(im, 0, 0);
+}
+ditherPlanet($('#brandmark'));
+$$('#crew canvas').forEach((cv, i) => { const a = i / 7 * Math.PI * 2; ditherPlanet(cv, -1 + Math.cos(a) * .8, .2 + Math.sin(a) * .6, 1 + Math.sin(a) * .5, -.1 + Math.cos(a) * .5); });
+
+function ditherPhoto(fig) {
+  const img = $('img', fig), cv = $('canvas', fig);
+  const run = () => {
+    const S = 2, w = Math.max(2, Math.round(img.naturalWidth / S)), h = Math.max(2, Math.round(img.naturalHeight / S));
+    cv.width = w; cv.height = h; const c = cv.getContext('2d', { willReadFrequently: true }); c.drawImage(img, 0, 0, w, h);
+    const d = c.getImageData(0, 0, w, h), p = d.data;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; let l = (p[i] * .299 + p[i + 1] * .587 + p[i + 2] * .114) / 255; l = clamp((l - .08) * 1.25); const b = l > BAYER[y % 8][x % 8] ? PAPER : INK; p[i] = b[0]; p[i + 1] = b[1]; p[i + 2] = b[2]; }
+    c.putImageData(d, 0, 0);
+  };
+  img.complete && img.naturalWidth ? run() : img.addEventListener('load', run, { once: true });
+  fig.addEventListener('pointermove', e => { const r = fig.getBoundingClientRect(); fig.style.setProperty('--mx', (e.clientX - r.left) + 'px'); fig.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
+  fig.addEventListener('pointerenter', () => { fig.classList.add('lens'); Sfx.blip(880, .03); });
+  fig.addEventListener('pointerleave', () => fig.classList.remove('lens'));
+}
+
+/* ================= SOUND (synthesised) ================= */
+const Sfx = (() => {
+  let ctx, master, dly, windG, windF, noiseBuf, on = false;
+  function init() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; master.connect(comp).connect(ctx.destination);
+    dly = ctx.createDelay(1); dly.delayTime.value = .31; const fb = ctx.createGain(); fb.gain.value = .34; const dlp = ctx.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
+    const dout = ctx.createGain(); dout.gain.value = .4; dly.connect(dlp); dlp.connect(fb); fb.connect(dly); dlp.connect(dout); dout.connect(master);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 480; lp.Q.value = .7; const dg = ctx.createGain(); dg.gain.value = .055;
+    [[55, 0, 'sine', 1], [82.41, 5, 'sine', .7], [110, -7, 'triangle', .22], [164.81, 3, 'triangle', .1]].forEach(([f, d, t, g]) => { const o = ctx.createOscillator(); o.type = t; o.frequency.value = f; o.detune.value = d; const gg = ctx.createGain(); gg.gain.value = g; o.connect(gg).connect(lp); o.start(); });
+    const lfo = ctx.createOscillator(); lfo.frequency.value = .05; const lg = ctx.createGain(); lg.gain.value = 240; lfo.connect(lg).connect(lp.frequency); lfo.start();
+    lp.connect(dg).connect(master);
+    const len = ctx.sampleRate * 3; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate); const d = noiseBuf.getChannelData(0); let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; b0 = .99765 * b0 + w * .099046; b1 = .963 * b1 + w * .2965164; b2 = .57 * b2 + w * 1.0526913; d[i] = (b0 + b1 + b2 + w * .1848) * .2; }
+    const ws = ctx.createBufferSource(); ws.buffer = noiseBuf; ws.loop = true; windF = ctx.createBiquadFilter(); windF.type = 'bandpass'; windF.frequency.value = 420; windF.Q.value = .9; windG = ctx.createGain(); windG.gain.value = .012;
+    ws.connect(windF).connect(windG).connect(master); ws.start();
+  }
+  const ok = () => on && ctx && ctx.state === 'running';
+  return {
+    get on() { return on; },
+    set(v) { on = v; if (v) { if (!ctx) init(); ctx.resume(); master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setTargetAtTime(.9, ctx.currentTime, .35); } else if (ctx) master.gain.setTargetAtTime(0, ctx.currentTime, .12); },
+    tick(f = 2600, v = .02, dur = .025) { if (!ok()) return; const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), hp = ctx.createBiquadFilter(); o.type = 'square'; o.frequency.setValueAtTime(f, t); hp.type = 'highpass'; hp.frequency.value = 1200; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); o.connect(hp).connect(g).connect(master); o.start(t); o.stop(t + dur + .02); },
+    blip(f = 660, v = .06) { if (!ok()) return; const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .5, t + .14); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + .22); o.connect(g); g.connect(master); g.connect(dly); o.start(t); o.stop(t + .25); },
+    chime(i = 0) { if (!ok()) return; const notes = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66]; const t = ctx.currentTime; [notes[i % 7], notes[(i + 2) % 7] * (i + 2 > 6 ? 2 : 1)].forEach((f, k) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f; const s = t + k * .09; g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(.045, s + .01); g.gain.exponentialRampToValueAtTime(.0001, s + 1.6); o.connect(g); g.connect(master); g.connect(dly); o.start(s); o.stop(s + 1.7); }); },
+    whoosh(v = 1) { if (!ok()) return; const t = ctx.currentTime, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.Q.value = 1.4; f.frequency.setValueAtTime(260, t); f.frequency.exponentialRampToValueAtTime(2600, t + .45); f.frequency.exponentialRampToValueAtTime(500, t + 1.1); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16 * v, t + .3); g.gain.exponentialRampToValueAtTime(.0001, t + 1.2); s.connect(f).connect(g).connect(master); s.start(t, Math.random() * 1.5); s.stop(t + 1.3); },
+    sparkle(n = 10, base = 1800) { if (!ok()) return; for (let i = 0; i < n; i++) setTimeout(() => this.tick(base + i * 140 + Math.random() * 300, .014, .02), i * 38 + Math.random() * 20); },
+    wind(v) { if (!ok()) return; const t = ctx.currentTime; windG.gain.setTargetAtTime(.01 + Math.min(v, 1) * .08, t, .15); windF.frequency.setTargetAtTime(360 + Math.min(v, 1) * 2400, t, .2); },
+  };
+})();
+const soundBtn = $('#sound');
+function setSound(v) { Sfx.set(v); soundBtn.setAttribute('aria-pressed', v); $('#soundState').textContent = v ? 'On' : 'Off'; store.set('ncs-sound', v ? '1' : '0'); if (v) Sfx.chime(0); }
+soundBtn.addEventListener('click', () => setSound(!Sfx.on));
+$$('a, button, tbody tr, .kv').forEach(el => el.addEventListener('pointerenter', () => Sfx.tick(2400 + Math.random() * 900, .016)));
+$$('a, button').forEach(el => el.addEventListener('click', () => Sfx.blip(740, .05)));
+$('#copyMail').addEventListener('click', async e => { const b = e.currentTarget; try { await navigator.clipboard.writeText('nocodesoc@gmail.com'); b.textContent = 'Copied'; } catch (err) { const r = document.createRange(); r.selectNodeContents($('#mailAddr')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selected'; } setTimeout(() => b.textContent = 'Copy', 1600); });
+$$('.photo').forEach(ditherPhoto);
+
+/* ================= SCRAMBLE + CUT CASCADE ================= */
+const GLYPHS = '#%&*+=<>/\\01XZ';
+function scramble(el, dur = 620) {
+  const final = el.dataset.text ?? (el.dataset.text = el.textContent);
+  if (reduce) { el.textContent = final; return; }
+  cancelAnimationFrame(el._raf); const t0 = performance.now(); let last = 0;
+  const step = now => {
+    const t = clamp((now - t0) / dur), n = final.length, rev = Math.floor(easeOut4(t) * n); let s = '';
+    for (let i = 0; i < n; i++) { const ch = final[i]; s += (i < rev || ch === ' ' || ch === '.') ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0]; }
+    el.textContent = s; if (now - last > 55) { Sfx.tick(1600 + Math.random() * 2000, .009, .018); last = now; }
+    if (t < 1) el._raf = requestAnimationFrame(step); else el.textContent = final;
+  };
+  el._raf = requestAnimationFrame(step);
+}
+const OFFS = [0, 70, 190, 240, 360, 410, 520, 600];
+function cutIn(beat) {
+  const kids = [...beat.children]; kids.forEach(k => { clearTimeout(k._to); if (!reduce) k.classList.add('pre'); });
+  kids.forEach((k, i) => { k._to = setTimeout(() => { k.classList.remove('pre'); k.querySelectorAll('[data-scr]').forEach(s => scramble(s)); if (k.matches('[data-scr]')) scramble(k); if (i < 3) Sfx.tick(3000 - i * 400, .012); }, reduce ? 0 : OFFS[i] ?? i * 90); });
+}
+$$('nav.tabs a').forEach(a => a.addEventListener('pointerenter', () => scramble(a, 300)));
+
+/* ================= TIMELINE ================= */
+const lenis = (!reduce && window.Lenis) ? new Lenis({ lerp: .08, wheelMultiplier: .8, smoothWheel: true }) : null;
+const spacers = $$('main > section');
+const ids = spacers.map(s => s.id);
+const stages = ids.map(id => $(`.stage[data-ch="${id}"]`));
+const NCH = ids.length;
+let tops = [], hs = [], VH = innerHeight;
+function measure() { VH = innerHeight; tops = spacers.map(s => s.getBoundingClientRect().top + scrollY); hs = spacers.map(s => s.offsetHeight); }
+function go(id, immediate = false) { const i = ids.indexOf(id); if (i < 0) return; const y = tops[i] + (i ? VH * .55 : 0); if (lenis) lenis.scrollTo(y, { immediate, duration: 2.2, easing: easeInOut }); else scrollTo({ top: y, behavior: immediate ? 'auto' : 'smooth' }); }
+$$('[data-nav]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); go(a.dataset.nav); try { history.replaceState(null, '', '#' + a.dataset.nav); } catch (err) {} }));
+addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ids.includes(h)) go(h); });
+
+let curCh = -1, curBeat = -1, ready = false;
+const navLinks = $$('[data-nav]');
+function activate(ci, bi) {
+  if (ci !== curCh) {
+    stages.forEach((s, k) => { s.classList.toggle('on', k === ci); s.inert = k !== ci; });
+    navLinks.forEach(a => a.setAttribute('aria-current', a.dataset.nav === ids[ci] ? 'true' : 'false'));
+    $('#chNum').textContent = String(ci + 1).padStart(2, '0'); $('#chName').textContent = stages[ci].dataset.name;
+    $('#manifesto').style.opacity = ci === 0 ? 1 : 0;
+    if (curCh !== -1) { Sfx.chime(ci); try { history.replaceState(null, '', '#' + ids[ci]); } catch (e) {} }
+    curCh = ci; curBeat = -1;
+  }
+  if (bi !== curBeat) {
+    const beats = $$('.beat', stages[ci]);
+    if (ci !== 0) { beats.forEach((b, k) => b.classList.toggle('on', k === bi)); if (beats[bi]) cutIn(beats[bi]); }
+    else if (ready) $$('.mark [data-scr]').forEach(s => scramble(s, 900));
+    curBeat = bi;
+  }
+}
+
+/* ================= WEBGL ================= */
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas: $('#gl'), antialias: false, powerPreference: 'high-performance' }); } catch (e) { document.documentElement.classList.add('no-gl'); }
+
+const SHARED = { uTime: { value: 0 }, uL1: { value: new THREE.Vector3() }, uL2: { value: new THREE.Vector3() }, uCam: { value: new THREE.Vector3() } };
+const NOISE = `
+float hash(vec3 p){ p = fract(p*0.3183099 + .1); p *= 17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float noise(vec3 x){ vec3 i = floor(x); vec3 f = fract(x); f = f*f*(3.0-2.0*f);
+  return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),
+             mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z); }
+float fbm(vec3 p){ float a=.5, s=0.; for(int i=0;i<4;i++){ s+=a*noise(p); p*=2.03; a*=.5; } return s; }`;
+const LIT_VS = `
+varying vec3 vN; varying vec3 vW; varying vec3 vO;
+void main(){
+  mat4 m = modelMatrix;
+  #ifdef USE_INSTANCING
+  m = modelMatrix * instanceMatrix;
+  #endif
+  vO = position;
+  vec4 w = m * vec4(position, 1.0);
+  vW = w.xyz;
+  vN = normalize(mat3(m) * normal);
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+const LIT_FS = `
+uniform vec3 uL1; uniform vec3 uL2; uniform vec3 uCam; uniform float uTime;
+uniform float uNoise; uniform float uFreq; uniform float uAmb; uniform float uFade; uniform float uRim; uniform float uHot; uniform float uFront; uniform float uBody;
+varying vec3 vN; varying vec3 vW; varying vec3 vO;
+${NOISE}
+void main(){
+  vec3 n0 = normalize(vN);
+  vec3 q = vO*uFreq + vec3(0.0, uTime*0.015, 0.0);
+  float f = fbm(q);
+  vec3 g = vec3(fbm(q*1.7+3.1), fbm(q*1.7+7.3), fbm(q*1.7+11.9)) - 0.5;
+  vec3 n = normalize(n0 + g*0.6*uNoise);
+  vec3 v = normalize(uCam - vW);
+  float d1 = max(dot(n, uL1), 0.0), d2 = max(dot(n, uL2), 0.0);
+  float l = d1*1.05 + d2*0.8;
+  float fr = pow(1.0 - max(dot(n0, v), 0.0), 2.6);
+  l += fr*uRim*(0.35 + d1 + d2);
+  l += pow(max(dot(n, v), 0.0), 1.5)*uFront;
+  l *= mix(1.0, 0.5 + 0.95*f, uNoise);
+  float lit = clamp((d1 + d2)*1.6, 0.0, 1.0);
+  l += uBody * (0.035 + 0.15*smoothstep(0.35, 0.75, fbm(q*0.8 + 5.0))) * (1.0 - lit);
+  l += uAmb + uHot*0.55;
+  float dist = length(vW - uCam);
+  l = mix(l, 0.045, 1.0 - exp(-max(dist - 7.0, 0.0)*0.05));
+  gl_FragColor = vec4(vec3(l*uFade), 1.0);
+}`;
+function litMat(o = {}) {
+  return new THREE.ShaderMaterial({ uniforms: { ...SHARED, uNoise: { value: o.noise ?? 1 }, uFreq: { value: o.freq ?? 2.2 }, uAmb: { value: o.amb ?? 0 }, uFade: { value: o.fade ?? 1 }, uRim: { value: o.rim ?? .3 }, uHot: { value: 0 }, uFront: { value: o.front ?? 0 }, uBody: { value: o.body ?? 0 } }, vertexShader: LIT_VS, fragmentShader: LIT_FS });
+}
+
+let W = innerWidth, H = innerHeight, DPR = Math.min(devicePixelRatio || 1, 2);
+const BASE = () => Math.max(2, Math.round(2 * DPR));
+const isNarrow = () => W / H < .85;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(35, W / H, .05, 300);
+let rt, post, postScene, postCam;
+
+/* --- sky: sparse drifting stipple bands --- */
+const sky = new THREE.Mesh(new THREE.SphereGeometry(150, 48, 32), new THREE.ShaderMaterial({
+  uniforms: { uTime: SHARED.uTime, uGround: { value: 0 } }, side: THREE.BackSide, depthWrite: false, depthTest: false,
+  vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform float uTime; uniform float uGround; varying vec3 vD; ${NOISE}
+  void main(){ float n = fbm(vD*2.4 + vec3(uTime*0.004, 0.0, uTime*0.002)); float band = smoothstep(0.48, 0.82, n);
+    float l = 0.02 + band*0.1 + smoothstep(0.0, -0.5, vD.y)*0.07*uGround; gl_FragColor = vec4(vec3(l), 1.0); }`,
+}));
+sky.renderOrder = -10; scene.add(sky);
+
+/* --- planet --- */
+const R = 1.6;
+const planet = new THREE.Mesh(new THREE.SphereGeometry(R, 128, 96), litMat({ noise: 1, freq: 1.6, rim: .28, body: 1 }));
+scene.add(planet);
+
+/* --- dust --- */
+const DUST_VS = `
+attribute float aSize; attribute float aSeed; attribute float aHalo;
+uniform float uTime; uniform vec2 uMouse; uniform float uAspect; uniform float uPulse; uniform float uFade; uniform float uHaloFade;
+varying float vA;
+void main(){
+  vec3 p = position;
+  float ang = uTime * (0.012 + aHalo*0.02) * (0.6 + aSeed);
+  float c = cos(ang), s = sin(ang); p.xz = mat2(c,-s,s,c) * p.xz;
+  float r = length(p);
+  float wave = 1.6 + uPulse*7.0;
+  p += normalize(p) * 0.55 * exp(-uPulse*1.6) * exp(-pow(r - wave, 2.0)*3.0) * step(0.001, uPulse);
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  vec4 cp = projectionMatrix * mv;
+  vec2 ndc = cp.xy / cp.w;
+  vec2 d = ndc - uMouse; d.x *= uAspect;
+  float push = smoothstep(0.32, 0.0, length(d)) * 0.09 * (0.4 + aSeed);
+  ndc += normalize(d + 1e-5) * push * vec2(1.0/uAspect, 1.0);
+  cp.xy = ndc * cp.w;
+  gl_Position = cp;
+  float z = -mv.z;
+  gl_PointSize = max(1.0, aSize * clamp(9.0 / z, 0.6, 2.4));
+  float tw = 0.65 + 0.35*sin(uTime*1.7 + aSeed*60.0);
+  float near = mix(smoothstep(46.0, 6.0, z), 1.0, aHalo);
+  vA = tw * near * mix(uFade, uHaloFade, aHalo) * (aHalo > 0.5 ? (1.0 - smoothstep(1.6, 2.7, r))*0.85 : 0.85);
+}`;
+const dustMat = new THREE.ShaderMaterial({ uniforms: { uTime: SHARED.uTime, uMouse: { value: new THREE.Vector2(9, 9) }, uAspect: { value: 1 }, uPulse: { value: 0 }, uFade: { value: 1 }, uHaloFade: { value: 1 } }, vertexShader: DUST_VS, fragmentShader: `varying float vA; void main(){ gl_FragColor = vec4(vec3(vA), 1.0); }` });
+{
+  const NF = (W < 760 ? 1400 : 2400), NH = (W < 760 ? 1300 : 2200), N = NF + NH;
+  const pos = new Float32Array(N * 3), size = new Float32Array(N), seed = new Float32Array(N), halo = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const h = i >= NF; const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+    const r = h ? R + .03 + Math.min(1.05, -Math.log(1 - Math.random() * .999) * .2) : 3.2 + Math.pow(Math.random(), .6) * 34;
+    pos[i * 3] = Math.cos(th) * s * r; pos[i * 3 + 1] = u * r * (h ? 1 : .7); pos[i * 3 + 2] = Math.sin(th) * s * r;
+    size[i] = h ? 1 : (Math.random() < .08 ? 2 : 1); seed[i] = Math.random(); halo[i] = h ? 1 : 0;
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aSize', new THREE.BufferAttribute(size, 1)); g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1)); g.setAttribute('aHalo', new THREE.BufferAttribute(halo, 1));
+  const pts = new THREE.Points(g, dustMat); pts.frustumCulled = false; scene.add(pts);
+}
+
+/* --- portfolio orbits + moons --- */
+const orbitGroup = new THREE.Group(); scene.add(orbitGroup);
+const MOONS = [{ n: 'Projects', r: 2.45, inc: [.32, .1], sz: .19, ring: true }, { n: 'Events', r: 3.05, inc: [-.2, .35], sz: .15 }, { n: 'Marketing', r: 3.7, inc: [.12, -.28], sz: .22 }, { n: 'Sponsorships', r: 4.35, inc: [-.38, -.08], sz: .14 }, { n: 'HR', r: 5.0, inc: [.24, .22], sz: .17 }];
+const ringMats = [];
+MOONS.forEach((m, i) => {
+  const piv = new THREE.Group(); piv.rotation.set(m.inc[0], 0, m.inc[1]); orbitGroup.add(piv);
+  const pts = []; for (let k = 0; k <= 256; k++) { const a = k / 256 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * m.r, 0, Math.sin(a) * m.r)); }
+  const lm = new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: .09, gapSize: .07, transparent: true, opacity: 0 }); ringMats.push(lm);
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lm); line.computeLineDistances(); piv.add(line);
+  const mat = litMat({ noise: .6, freq: 5, rim: .5, amb: .02, front: .15, fade: 0 });
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(m.sz, 32, 24), mat);
+  if (m.ring) { const rg = new THREE.Mesh(new THREE.TorusGeometry(m.sz * 1.9, .014, 6, 64), mat); rg.rotation.x = 1.25; moon.add(rg); }
+  piv.add(moon); m.mesh = moon; m.mat = mat; m.a0 = i * 1.7 + .6; m.hot = 0;
+});
+
+/* --- voxel words --- */
+const FONT = { N: ['10001','11001','10101','10011','10001','10001','10001'], O: ['01110','10001','10001','10001','10001','10001','01110'], T: ['11111','00100','00100','00100','00100','00100','00100'], I: ['01110','00100','00100','00100','00100','00100','01110'], F: ['11111','10000','10000','11110','10000','10000','10000'], R: ['11110','10001','10001','11110','10100','10010','10001'], A: ['01110','10001','10001','11111','10001','10001','10001'], M: ['10001','11011','10101','10101','10001','10001','10001'], E: ['11111','10000','10000','11110','10000','10000','11111'], B: ['11110','10001','10001','11110','10001','10001','11110'], S: ['01111','10000','10000','01110','00001','00001','11110'], '4': ['00010','00110','01010','10010','11111','00010','00010'], '1': ['00100','01100','00100','00100','00100','00100','01110'], Z: ['11111','00001','00010','00100','01000','10000','11111'], P: ['11110','10001','10001','11110','10000','10000','10000'], Y: ['10001','10001','01010','00100','00100','00100','00100'], ' ': ['000','000','000','000','000','000','000'] };
+const WORDS = ['NOTION', 'A1ZAP', 'FRAMER', 'BASE44', 'SYM AI'];
+const E = new THREE.Vector3(-8.2, .25, -2.4);
+const VS = .15, VN = 190;
+const voxMat = litMat({ noise: .12, freq: 7, rim: .45, amb: .04, front: .62 });
+const vox = new THREE.InstancedMesh(new THREE.BoxGeometry(VS * .84, VS * .84, VS * .84), voxMat, VN);
+vox.position.copy(E); vox.frustumCulled = false; scene.add(vox);
+const vFrom = new Float32Array(VN * 3), vCur = new Float32Array(VN * 3), vT = new Float32Array(VN * 3), vStart = new Float32Array(VN), vDur = new Float32Array(VN).fill(1), vIsWord = new Uint8Array(VN), vSpin = new Float32Array(VN * 3), vArc = new Float32Array(VN);
+const order = [...Array(VN).keys()].sort(() => Math.random() - .5);
+function wordPts(w) {
+  const pts = []; let cols = 0; for (const ch of w) cols += (FONT[ch] || FONT[' '])[0].length + 1; cols -= 1; let cx = 0;
+  for (const ch of w) { const g = FONT[ch] || FONT[' ']; for (let r = 0; r < 7; r++) for (let c = 0; c < g[r].length; c++) if (g[r][c] === '1') pts.push([(cx + c - (cols - 1) / 2) * VS, (3 - r) * VS, 0]); cx += g[0].length + 1; }
+  return pts;
+}
+function debris(i, t, out) { const a = i * 2.39996 + t * (.05 + (i % 5) * .012), rr = 2.5 + (i % 9) * .16; out[0] = Math.cos(a) * rr; out[1] = Math.sin(a * 1.7 + i) * .55 + ((i % 3) - 1) * .35; out[2] = Math.sin(a) * rr * .55 - .4; return out; }
+for (let i = 0; i < VN; i++) { const d = debris(i, 0, [0, 0, 0]); vCur.set(d, i * 3); vFrom.set(d, i * 3); vSpin[i * 3] = (Math.random() - .5) * 6; vSpin[i * 3 + 1] = (Math.random() - .5) * 6; vSpin[i * 3 + 2] = (Math.random() - .5) * 4; vArc[i] = (Math.random() * .8 + .35) * (Math.random() < .5 ? -1 : 1); }
+let curWord = -2;
+function setWord(k, now) {
+  if (k === curWord) return; curWord = k;
+  const pts = k >= 0 ? wordPts(WORDS[k]) : [];
+  for (let j = 0; j < VN; j++) {
+    const i = order[j]; vFrom[i * 3] = vCur[i * 3]; vFrom[i * 3 + 1] = vCur[i * 3 + 1]; vFrom[i * 3 + 2] = vCur[i * 3 + 2];
+    let tx, ty, tz;
+    if (j < pts.length) { vIsWord[i] = 1; vT.set(pts[j], i * 3); [tx, ty, tz] = pts[j]; } else { vIsWord[i] = 0; [tx, ty, tz] = debris(i, now + 1, [0, 0, 0]); }
+    const dist = Math.hypot(tx - vFrom[i * 3], ty - vFrom[i * 3 + 1], tz - vFrom[i * 3 + 2]);
+    vDur[i] = clamp(.6 + dist * .22, .6, 1.4);
+    const lead = j < 7;
+    vStart[i] = now + (lead ? j * .025 : .14 + ((tx + 2.6) / 5.2) * .3 + Math.random() * .14);
+  }
+  if (k >= 0) Sfx.sparkle(12, 1500 + k * 180);
+}
+
+/* --- pedestal + artifacts --- */
+const P = new THREE.Vector3(0, -9.2, 0);
+const proj = new THREE.Group(); proj.position.copy(P); scene.add(proj);
+const pedMat = litMat({ noise: .35, freq: 3, rim: .4, amb: .03, front: .12 });
+const ped = new THREE.Mesh(new THREE.CylinderGeometry(1.55, 1.7, .22, 96, 1), pedMat); ped.position.y = -.9; proj.add(ped);
+const ped2 = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.2, .1, 96, 1), pedMat); ped2.position.y = -.74; proj.add(ped2);
+const glowMat = new THREE.ShaderMaterial({ uniforms: { uFade: { value: 1 }, uTime: SHARED.uTime }, vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }', fragmentShader: 'uniform float uFade; uniform float uTime; varying vec3 vP; void main(){ float a = atan(vP.y, vP.x); float s = 0.82 + 0.18*sin(a*3.0 + uTime*0.8); gl_FragColor = vec4(vec3(1.15*s*uFade), 1.0); }' });
+const glow = new THREE.Mesh(new THREE.TorusGeometry(1.72, .026, 8, 160), glowMat); glow.rotation.x = Math.PI / 2; glow.position.y = -.79; proj.add(glow);
+const floorMat = new THREE.ShaderMaterial({ uniforms: { uFade: { value: 1 } }, vertexShader: 'varying vec2 vU; void main(){ vU = position.xy; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }', fragmentShader: 'uniform float uFade; varying vec2 vU; void main(){ float r = length(vU); float l = 0.30*exp(-pow(max(r-1.7,0.0),1.2)*0.55) * smoothstep(1.6, 1.85, r); gl_FragColor = vec4(vec3(l*uFade), 1.0); }' });
+const floor = new THREE.Mesh(new THREE.CircleGeometry(14, 96), floorMat); floor.rotation.x = -Math.PI / 2; floor.position.y = -1.01; proj.add(floor);
+const haloMats = [];
+const halos = [2.0, 2.4, 2.85].map((r, i) => { const m = new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: .05 + i * .03, gapSize: .05, transparent: true, opacity: 0 }); haloMats.push(m); const pts = []; for (let k = 0; k <= 200; k++) { const a = k / 200 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)); } const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), m); l.computeLineDistances(); l.position.y = -.98 + i * .01; proj.add(l); return l; });
+const artMat = litMat({ noise: .15, freq: 6, rim: .5, amb: .04, front: .38 });
+const arts = [];
+const D = new THREE.Object3D();
+const stag = (a, i, n, spread = .6) => expo(clamp((a - i / n * spread) / (1 - spread)));
+{ // CampusSync: a week grid; the slots where everyone is free rise
+  const g = new THREE.Group(); const im = new THREE.InstancedMesh(new THREE.BoxGeometry(.2, .2, .2), artMat, 35); im.frustumCulled = false; const free = new Set([2, 9, 16, 11, 18, 25, 20, 27, 30]); const cells = [];
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 7; c++) cells.push({ x: (c - 3) * .24, z: (r - 2) * .24, f: free.has(cells.length) });
+  g.add(im); g.userData.update = (t, a) => { cells.forEach((u, i) => { const e = stag(a, i, 35); const h = u.f ? .55 + Math.sin(t * 1.4 + i) * .05 : .12; D.position.set(u.x, h / 2 - .2 + (1 - e) * 2.6, u.z); D.rotation.set((1 - e) * 2, (1 - e) * 1.3, 0); D.scale.set(1, h / .2, 1); D.updateMatrix(); im.setMatrixAt(i, D.matrix); }); im.instanceMatrix.needsUpdate = true; };
+  g.rotation.x = .3; arts.push(g);
+}
+{ // Quad: four players around a lobby
+  const g = new THREE.Group(); const core = new THREE.Mesh(new THREE.IcosahedronGeometry(.34, 1), artMat); g.add(core); const cubes = [0, 1, 2, 3].map(() => { const c = new THREE.Mesh(new THREE.BoxGeometry(.28, .28, .28), artMat); g.add(c); return c; });
+  g.userData.update = (t, a) => { core.scale.setScalar(.001 + stag(a, 0, 5)); core.rotation.set(t * .3, t * .5, 0); cubes.forEach((c, i) => { const e = stag(a, i + 1, 5); const ang = t * .7 + i * Math.PI / 2; const r = (.85 + Math.sin(t * 1.3 + i) * .08) * (1 + (1 - e) * 3); c.position.set(Math.cos(ang) * r, Math.sin(ang * 2) * .18, Math.sin(ang) * r); c.rotation.set(t + i, t * .7, 0); }); };
+  arts.push(g);
+}
+{ // LifeMaxxing: a climbing stair
+  const g = new THREE.Group(); const bars = [0, 1, 2, 3, 4, 5, 6].map(() => { const b = new THREE.Mesh(new THREE.BoxGeometry(.18, 1, .18), artMat); g.add(b); return b; });
+  g.userData.update = (t, a) => bars.forEach((b, i) => { const e = stag(a, i, 7); const h = Math.max(.001, (.15 + i * .17 + Math.max(0, Math.sin(t * 1.2 - i * .5)) * .07) * e); b.scale.y = h; b.position.set((i - 3) * .24, h / 2 - .45, Math.sin(i * .9) * .1); });
+  arts.push(g);
+}
+{ // Your build: an open frame filling in
+  const g = new THREE.Group(); const fm = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 }); const frame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.1, 1.1, 1.1)), fm); g.add(frame);
+  const bits = []; for (let i = 0; i < 8; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(.24, .24, .24), artMat); g.add(b); bits.push([b, (i & 1 ? 1 : -1) * .27, (i & 2 ? 1 : -1) * .27, (i & 4 ? 1 : -1) * .27]); }
+  g.userData.update = (t, a) => { const c = (t * .32) % 1; frame.scale.setScalar(.001 + expo(a)); bits.forEach(([b, x, y, z], i) => { const k = clamp((c * 9 - i) / 1.2); const e = expo(k); b.scale.setScalar(.001 + e); const s = 1 + (1 - e) * 2.2; b.position.set(x * s, y * s, z * s); }); fm.opacity = g.userData.fade ?? 1; };
+  arts.push(g);
+}
+arts.forEach(g => { g.userData.a = 0; g.userData.on = false; g.userData.t0 = 0; g.visible = false; proj.add(g); });
+let curArt = -2;
+
+/* --- team satellites --- */
+const satGroup = new THREE.Group(); scene.add(satGroup);
+const SATS = $$('#crew .row').map((el, i) => {
+  const piv = new THREE.Group(); piv.rotation.set((i % 2 ? -1 : 1) * (.22 + i * .06), 0, (i % 3 - 1) * .28); satGroup.add(piv);
+  const body = new THREE.Group(); const m = litMat({ noise: .1, freq: 8, rim: .6, amb: .08, front: .45, fade: 0 });
+  body.add(new THREE.Mesh(new THREE.BoxGeometry(.34, .34, .48), m));
+  [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.BoxGeometry(.62, .025, .24), m); p.position.x = s * .5; body.add(p); });
+  piv.add(body);
+  return { el, piv, body, mat: m, r: 2.25 + i * .23, a0: i * .9, sp: .14 / (1 + i * .12), name: $('.nm', el).textContent, role: $('.rl', el).textContent, hot: 0 };
+});
+
+/* --- tags tracking 3D points --- */
+const tagsEl = $('#tags');
+function mkTag(t, s) { const el = document.createElement('div'); el.className = 'tag'; el.innerHTML = `<span class="tag-dot"></span><span class="tag-t"></span>${s ? '<span class="tag-s"></span>' : ''}`; $('.tag-t', el).textContent = t; if (s) $('.tag-s', el).textContent = s; tagsEl.appendChild(el); return el; }
+MOONS.forEach(m => m.tag = mkTag(m.n, 'r ' + m.r.toFixed(2)));
+SATS.forEach(s => s.tag = mkTag(s.name, s.role));
+let hotSat = null;
+SATS.forEach(s => { s.el.addEventListener('pointerenter', () => { s.hot = 1; hotSat = s; s.tag.classList.add('hot'); s.el.classList.add('hot'); Sfx.blip(990, .04); }); s.el.addEventListener('pointerleave', () => { s.hot = 0; if (hotSat === s) hotSat = null; s.tag.classList.remove('hot'); s.el.classList.remove('hot'); }); });
+$$('#orbits > div').forEach(d => { const m = MOONS[+d.dataset.moon]; d.addEventListener('pointerenter', () => { m.hot = 1; m.tag.classList.add('hot'); Sfx.blip(660 + +d.dataset.moon * 110, .04); }); d.addEventListener('pointerleave', () => { m.hot = 0; m.tag.classList.remove('hot'); }); });
+
+/* --- post: 1-bit ordered dither --- */
+const POST_FS = `
+uniform sampler2D tScene; uniform vec2 uRes; uniform float uCell; uniform float uTime; uniform float uAberr; uniform float uIntro; uniform float uJit;
+uniform float uMask; uniform float uMaskMode; uniform vec3 uInk; uniform vec3 uPaper;
+float b2(vec2 a){ a = floor(a); return fract(dot(a, vec2(0.5, a.y*0.75))); }
+float b4(vec2 a){ return b2(0.5*a)*0.25 + b2(a); }
+float b8(vec2 a){ return b4(0.5*a)*0.25 + b2(a); }
+float h21(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)))*43758.5453); }
+float lum(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+void main(){
+  vec2 cell = floor(gl_FragCoord.xy / uCell);
+  vec2 uv = (cell*uCell + 0.5*uCell) / uRes;
+  vec2 dir = uv - 0.5; float r = length(dir*vec2(uRes.x/uRes.y, 1.0));
+  vec2 off = dir * (r*r*0.006) * uAberr;
+  vec3 l = vec3(lum(texture2D(tScene, uv + off).rgb), lum(texture2D(tScene, uv).rgb), lum(texture2D(tScene, uv - off).rgb));
+  l = smoothstep(0.015, 0.92, l) * (1.0 - r*r*0.3) * uIntro;
+  float m = uMaskMode < 0.5 ? smoothstep(0.56, 0.24, uv.x) : smoothstep(0.66, 0.36, uv.y);
+  l *= 1.0 - m*uMask*0.82;
+  float th = b8(cell) * 0.9 + 0.05 + (h21(cell + floor(uTime*12.0)) - 0.5) * uJit;
+  gl_FragColor = vec4(mix(uInk, uPaper, step(vec3(th), l)), 1.0);
+}`;
+function setupRT() {
+  W = innerWidth; H = innerHeight; DPR = Math.min(devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(1); renderer.setSize(Math.floor(W * DPR), Math.floor(H * DPR), false);
+  $('#gl').style.width = W + 'px'; $('#gl').style.height = H + 'px';
+  const b = BASE(), rw = Math.ceil(W * DPR / b), rh = Math.ceil(H * DPR / b);
+  if (!rt) rt = new THREE.WebGLRenderTarget(rw, rh, { depthBuffer: true }); else rt.setSize(rw, rh);
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  if (post) post.uniforms.uRes.value.set(W * DPR, H * DPR);
+  dustMat.uniforms.uAspect.value = W / H;
+}
+if (renderer) {
+  setupRT();
+  post = new THREE.ShaderMaterial({ uniforms: { tScene: { value: rt.texture }, uRes: { value: new THREE.Vector2(W * DPR, H * DPR) }, uCell: { value: BASE() }, uTime: SHARED.uTime, uAberr: { value: 0 }, uIntro: { value: 0 }, uJit: { value: .02 }, uMask: { value: 0 }, uMaskMode: { value: 0 }, uInk: { value: new THREE.Color(0x000000) }, uPaper: { value: new THREE.Color(0xe9e9e4) } }, vertexShader: 'void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }', fragmentShader: POST_FS, depthTest: false, depthWrite: false });
+  postScene = new THREE.Scene(); const tri = new THREE.BufferGeometry(); tri.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3)); const pm = new THREE.Mesh(tri, post); pm.frustumCulled = false; postScene.add(pm); postCam = new THREE.Camera();
+}
+
+/* ================= CAMERA: start and end pose per chapter ================= */
+const K = {
+  home:      { p0: [0, 0, 6.6],        t0: [0, 0, 0],          p1: [0, .05, 6.3],      t1: [0, 0, 0] },
+  purpose:   { p0: [4.0, 2.2, 8.2],    t0: [-2.3, -.1, 0],     p1: [7.2, 5.0, 13.5],   t1: [-3.9, 0, 0] },
+  education: { p0: [-4.6, 1.3, 8.4],   t0: [-9.75, .55, -2.4], p1: [-6.0, .9, 7.9],    t1: [-9.95, .5, -2.4] },
+  projects:  { p0: [2.9, -8.55, 5.2],  t0: [-1.05, -8.95, 0],  p1: [-1.9, -8.5, 5.5],  t1: [-2.4, -8.95, 0] },
+  team:      { p0: [-1.4, 3.4, 10.6],  t0: [-2.8, 0, 0],       p1: [-3.6, 2.4, 10.1],  t1: [-3.0, 0, 0] },
+  join:      { p0: [0, 1.0, 6.2],      t0: [0, 2.55, 0],       p1: [0, 1.0, 6.0],      t1: [0, 2.6, 0] },
+};
+const NARROW = {
+  home:      { p0: [0, 0, 13.2],       t0: [0, 0, 0],          p1: [0, 0, 12.8],       t1: [0, 0, 0] },
+  purpose:   { p0: [3, 2, 16.5],       t0: [0, -2.3, 0],       p1: [4.6, 4, 20.5],     t1: [0, -3.4, 0] },
+  education: { p0: [-8.0, -1.8, 9.4],  t0: [-8.2, -2.15, -2.4], p1: [-8.6, -1.8, 9.2], t1: [-8.2, -2.15, -2.4] },
+  projects:  { p0: [1.8, -8.1, 8.8],   t0: [0, -10.6, 0],      p1: [-1.8, -8.1, 8.8],  t1: [0, -10.6, 0] },
+  team:      { p0: [0, 4, 15.5],       t0: [0, -3.4, 0],       p1: [-1.2, 3, 15.5],    t1: [0, -3.4, 0] },
+  join:      { p0: [0, 1.0, 9.5],      t0: [0, 3.5, 0],        p1: [0, 1.0, 9.3],      t1: [0, 3.5, 0] },
+};
+const tA = new THREE.Vector3(), tB = new THREE.Vector3(), tC = new THREE.Vector3(), tD = new THREE.Vector3(), camTgt = new THREE.Vector3();
+function pose(i, y, Pv, Tv) {
+  const k = (isNarrow() ? NARROW : K)[ids[i]]; const pp = easeInOut(clamp((y - tops[i]) / Math.max(1, hs[i] - (i === NCH - 1 ? VH * .5 : 0))));
+  Pv.set(...k.p0).lerp(tD.set(...k.p1), pp); Tv.set(...k.t0).lerp(tD.set(...k.t1), pp);
+}
+const mouse = { x: 0, y: 0, sx: 0, sy: 0, in: false };
+addEventListener('pointermove', e => { mouse.x = e.clientX / W * 2 - 1; mouse.y = -(e.clientY / H * 2 - 1); mouse.in = true; }, { passive: true });
+document.addEventListener('pointerleave', () => { mouse.in = false; });
+
+let pulseT = -1;
+const ray = new THREE.Raycaster(); const sph = new THREE.Sphere(new THREE.Vector3(), R * 1.05);
+const blocked = t => t.closest('a,button,.photo,nav,table,.row,.kv');
+addEventListener('pointerdown', e => { if (blocked(e.target) || !renderer) return; ray.setFromCamera({ x: e.clientX / W * 2 - 1, y: -(e.clientY / H * 2 - 1) }, camera); if (ray.ray.intersectSphere(sph, tC)) { pulseT = 0; Sfx.blip(220, .12); Sfx.whoosh(.6); } });
+addEventListener('pointermove', e => { if (!renderer) return; ray.setFromCamera({ x: e.clientX / W * 2 - 1, y: -(e.clientY / H * 2 - 1) }, camera); document.body.style.cursor = (!blocked(e.target) && ray.ray.intersectSphere(sph, tC)) ? 'pointer' : ''; }, { passive: true });
+
+/* ================= LOOP ================= */
+const clock = new THREE.Clock(); let tSec = 0, introT = 0, wasTrans = false, roll = 0, maskS = 0;
+const mPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -E.z); const mHit = new THREE.Vector3();
+const L1 = new THREE.Vector3(), L2 = new THREE.Vector3();
+function frame(now) {
+  requestAnimationFrame(frame);
+  lenis && lenis.raf(now);
+  const dt = Math.min(.05, clock.getDelta()); tSec += dt; SHARED.uTime.value = tSec;
+  const y = lenis ? lenis.animatedScroll : scrollY;
+  const vel = lenis ? lenis.velocity : 0, sp = Math.abs(vel);
+
+  // content switches exactly at the spacer boundary (mid camera move); one screen per beat
+  let ci = 0; while (ci < NCH - 1 && y >= tops[ci + 1]) ci++;
+  const nb = +spacers[ci].dataset.beats; const bi = Math.min(nb - 1, Math.floor(clamp((y - tops[ci]) / hs[ci]) * nb));
+  activate(ci, bi);
+
+  // camera: slow dolly inside a chapter, blended over one screen centred on each boundary
+  let j = -1, tt = 0; for (let k = 1; k < NCH; k++) if (Math.abs(y - tops[k]) < VH * .5) { j = k; tt = (y - (tops[k] - VH * .5)) / VH; }
+  if (j > 0) { pose(j - 1, y, tA, camTgt); pose(j, y, tB, tC); const e = easeInOut(tt); tA.lerp(tB, e); camTgt.lerp(tC, e); }
+  else pose(ci, y, tA, camTgt);
+  const c = j > 0 ? (j - 1) + easeInOut(tt) : ci;
+  const tr = j > 0 ? tt : 0;
+  const inTrans = tr > .04 && tr < .96; if (inTrans && !wasTrans) Sfx.whoosh(.8); wasTrans = inTrans;
+  Sfx.wind(sp / 40);
+
+  if (hotSat && ci === 4) { hotSat.body.getWorldPosition(tC); camTgt.lerp(tC, .05); }
+
+  mouse.sx = lerp(mouse.sx, mouse.x, .06); mouse.sy = lerp(mouse.sy, mouse.y, .06);
+  camera.position.copy(tA); camera.lookAt(camTgt); camera.updateMatrixWorld();
+  tB.set(1, 0, 0).applyQuaternion(camera.quaternion).multiplyScalar(mouse.sx * .22); tC.set(0, 1, 0).applyQuaternion(camera.quaternion).multiplyScalar(mouse.sy * .14);
+  camera.position.add(tB).add(tC); camera.lookAt(camTgt);
+  roll = lerp(roll, clamp(vel * .0006, -.009, .009), .08); camera.rotateZ(roll);
+  camera.updateMatrixWorld();
+  SHARED.uCam.value.copy(camera.position);
+  sky.position.copy(camera.position);
+
+  L1.set(-1 + mouse.sx * .95, .22 + mouse.sy * .7, -.72).normalize().applyQuaternion(camera.quaternion);
+  L2.set(1 + mouse.sx * .95, -.12 + mouse.sy * .7, -.72).normalize().applyQuaternion(camera.quaternion);
+  SHARED.uL1.value.copy(L1); SHARED.uL2.value.copy(L2);
+
+  const w = (ctr, wd) => clamp(1 - Math.abs(c - ctr) / wd);
+  planet.rotation.y = tSec * .03;
+  planet.material.uniforms.uFade.value = 1 - w(3, .8) * .9;
+  sky.material.uniforms.uGround.value = w(3, .9);
+
+  const du = dustMat.uniforms; du.uMouse.value.set(mouse.in ? lerp(du.uMouse.value.x, mouse.x, .2) : 9, mouse.in ? lerp(du.uMouse.value.y, mouse.y, .2) : 9);
+  if (pulseT >= 0) { pulseT += dt; du.uPulse.value = pulseT; if (pulseT > 3) { pulseT = -1; du.uPulse.value = 0; } }
+  du.uHaloFade.value = 1 - w(3, .8);
+
+  const wo = Math.max(w(1, 1.1), w(5, 1) * .5, w(4, 1) * .25);
+  ringMats.forEach(m => m.opacity = wo * .5);
+  MOONS.forEach(m => { const ang = m.a0 + tSec * (.12 / m.r); m.mesh.position.set(Math.cos(ang) * m.r, 0, Math.sin(ang) * m.r); m.mesh.rotation.y = tSec * .4; m.mat.uniforms.uFade.value = wo; m.mat.uniforms.uHot.value = lerp(m.mat.uniforms.uHot.value, m.hot ? 1 : 0, .1); });
+
+  const wv = w(2, .85); vox.visible = wv > .001;
+  if (vox.visible) {
+    const k = ci === 2 ? (bi >= 1 ? bi - 1 : -1) : -1; setWord(k, tSec);
+    ray.setFromCamera({ x: mouse.sx, y: mouse.sy }, camera); const hasM = mouse.in && ray.ray.intersectPlane(mPlane, mHit); if (hasM) mHit.sub(E);
+    const dtmp = [0, 0, 0];
+    for (let n = 0; n < VN; n++) {
+      const t = clamp((tSec - vStart[n]) / vDur[n]), e = expo(t);
+      let tx, ty, tz; if (vIsWord[n]) { tx = vT[n * 3]; ty = vT[n * 3 + 1]; tz = vT[n * 3 + 2]; } else { debris(n, tSec, dtmp); tx = dtmp[0]; ty = dtmp[1]; tz = dtmp[2]; }
+      let px = lerp(vFrom[n * 3], tx, e), py = lerp(vFrom[n * 3 + 1], ty, e) + Math.sin(Math.PI * t) * .25, pz = lerp(vFrom[n * 3 + 2], tz, e) + Math.sin(Math.PI * t) * vArc[n];
+      let bul = 0; if (hasM && vIsWord[n]) { bul = smooth(.75, 0, Math.hypot(px - mHit.x, py - mHit.y)); pz += bul * .45; }
+      vCur[n * 3] = px; vCur[n * 3 + 1] = py; vCur[n * 3 + 2] = pz;
+      const s1 = 1 - e; D.position.set(px, py, pz); D.rotation.set(vSpin[n * 3] * s1 + bul * 1.4 + (vIsWord[n] ? 0 : tSec * .4), vSpin[n * 3 + 1] * s1 + (vIsWord[n] ? Math.sin(tSec * .8 + px) * .08 : tSec * .3), vSpin[n * 3 + 2] * s1);
+      D.scale.setScalar(Math.max(.001, wv * (vIsWord[n] ? 1 : .6))); D.updateMatrix(); vox.setMatrixAt(n, D.matrix);
+    }
+    vox.instanceMatrix.needsUpdate = true;
+    vox.rotation.y = mouse.sx * .18; vox.rotation.x = -mouse.sy * .1; vox.scale.setScalar(isNarrow() ? .44 : 1);
+  } else if (curWord !== -1) setWord(-1, tSec);
+
+  const wp = w(3, .85); proj.visible = wp > .001;
+  if (proj.visible) {
+    pedMat.uniforms.uFade.value = wp; artMat.uniforms.uFade.value = wp; glowMat.uniforms.uFade.value = wp; floorMat.uniforms.uFade.value = wp;
+    haloMats.forEach((m, k) => m.opacity = wp * (.6 - k * .15)); halos.forEach((h, k) => h.rotation.y = tSec * (.05 + k * .03) * (k % 2 ? -1 : 1));
+    const ak = ci === 3 ? (bi >= 1 && bi <= 4 ? bi - 1 : (bi === 0 ? 0 : 3)) : -1;
+    if (ak !== curArt) { curArt = ak; if (ak >= 0) { Sfx.blip(440 + ak * 110, .06); Sfx.sparkle(6, 2200); } arts.forEach((g, n) => { if (n === ak) { g.userData.on = true; g.userData.t0 = tSec; } else g.userData.on = false; }); }
+    arts.forEach(g => {
+      const u = g.userData;
+      if (u.on) u.a = clamp((tSec - u.t0) / 1.3); else u.a = Math.max(0, u.a - dt / .3);
+      g.visible = u.a > .001; if (!g.visible) return;
+      g.scale.setScalar(u.on ? 1 : .001 + easeOut4(u.a)); g.rotation.y = tSec * .3 + mouse.sx * .5; g.position.y = .1 + Math.sin(tSec * 1.1) * .05; u.fade = wp; u.update(tSec, u.on ? u.a : 1);
+    });
+  }
+
+  const ws = w(4, .9); satGroup.visible = ws > .001;
+  if (satGroup.visible) SATS.forEach(s => { const ang = s.a0 + tSec * s.sp; s.body.position.set(Math.cos(ang) * s.r, 0, Math.sin(ang) * s.r); s.body.rotation.set(tSec * .25, -ang, .2); s.mat.uniforms.uFade.value = ws; s.mat.uniforms.uHot.value = lerp(s.mat.uniforms.uHot.value, s.hot ? 1 : 0, .12); s.body.scale.setScalar(1 + s.mat.uniforms.uHot.value * .35); });
+
+  const tagW = (list, weight, get) => list.forEach(o => {
+    if (weight < .02) { o.tag.style.opacity = 0; return; }
+    get(o).getWorldPosition(tB); const toP = tC.copy(tB).sub(camera.position); const dist = toP.length(); toP.normalize();
+    const b = camera.position.dot(toP), cc = camera.position.lengthSq() - R * R, disc = b * b - cc; let hidden = false; if (disc > 0) { const th = -b - Math.sqrt(disc); if (th > 0 && th < dist) hidden = true; }
+    tB.project(camera); const sx = (tB.x * .5 + .5) * W, sy = (-tB.y * .5 + .5) * H;
+    const flip = W > 820 ? sx > W - 260 : sx > W * .55; o.tag.classList.toggle('flip', flip);
+    const vis = !hidden && tB.z < 1 && sx > 20 && sx < W - 20 && sy > 110 && sy < H - 60 && !(W > 820 && sx < W * .5) && !(W <= 820 && sy > H * .45);
+    o.tag.style.opacity = vis ? weight : 0; o.tag.style.transform = `translate3d(${(flip ? sx - 12 : sx + 12).toFixed(1)}px,${(sy - 8).toFixed(1)}px,0) translateX(${flip ? '-100%' : '0'})`;
+  });
+  tagW(MOONS, w(1, .6), o => o.mesh);
+  tagW(SATS, w(4, .55), o => o.body);
+
+  introT = ready ? Math.min(1, introT + dt / 1.6) : 0;
+  const ie = expo(introT);
+  const chunk = 1 + Math.pow(Math.sin(Math.PI * tr), 2) * 1.6 + (1 - ie) * 22;
+  const maskT = (c > .5 && c < 4.6) ? 1 : 0; maskS = lerp(maskS, maskT, .06);
+  if (post) {
+    post.uniforms.uCell.value = Math.max(1, Math.round(chunk)) * BASE();
+    post.uniforms.uAberr.value = Math.min(1.5, smooth(2, 14, sp) * 1.5 + Math.sin(Math.PI * tr) * 1.5);
+    post.uniforms.uJit.value = .012 + Math.min(sp / 30, 1) * .05;
+    post.uniforms.uIntro.value = Math.min(1, ie * 1.3);
+    post.uniforms.uMask.value = maskS; post.uniforms.uMaskMode.value = isNarrow() ? 1 : 0;
+  }
+  if (renderer) { renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.setRenderTarget(null); renderer.render(postScene, postCam); }
+}
+
+/* ================= BOOT ================= */
+function boot() {
+  measure();
+  const h = location.hash.slice(1); if (ids.includes(h) && h !== 'home') go(h, true);
+  requestAnimationFrame(frame);
+  const ldn = $('#ldn'), t0 = performance.now();
+  const tick = () => { const t = clamp((performance.now() - t0) / 900); ldn.textContent = String(Math.round(easeOut4(t) * 100)).padStart(3, '0'); if (t < 1) requestAnimationFrame(tick); else { ready = true; $('#ldr').hidden = true; $('#chr').hidden = false; if (curCh === 0) $$('.mark [data-scr]').forEach(s => scramble(s, 900)); } };
+  requestAnimationFrame(tick);
+  if (store.get('ncs-sound') === '1') addEventListener('pointerdown', () => { if (!Sfx.on) setSound(true); }, { once: true });
+}
+addEventListener('resize', () => { if (renderer) setupRT(); measure(); });
+(document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]) : Promise.resolve()).then(boot);
+addEventListener('load', measure);
+</script>
+</body>
+</html>
